@@ -65,8 +65,7 @@ class SliverStairedGridDelegate
     );
     int i = 0;
     double mainAxisOffset = 0;
-    double crossAxisOffset = 0;
-    bool reversed = false;
+    List<double> crossAxisOffsets = [0];
     
     while (i < tileCount) {
       int startIndex = i;
@@ -82,11 +81,16 @@ class SliverStairedGridDelegate
       final isHorizontal = constraints.axis == Axis.horizontal;
       final usableCrossAxisExtent = maxCrossAxisExtent - ((i - startIndex - 1) * crossAxisSpacing);
       double targetMainAxisOffset = 0;
-
+      
+      List<double> tempCrossAxisOffsets = List.from(crossAxisOffsets);
+      crossAxisOffsets.clear();
+      
       for (int j = startIndex; j < i; j++) {
         final tile = pattern[j];
         final crossAxisExtent = usableCrossAxisExtent * tile.crossAxisRatio;
         final mainAxisExtent = crossAxisExtent / tile.aspectRatio;
+        
+        double crossAxisOffset = tempCrossAxisOffsets.removeAt(0);
         
         final tileRect = SliverGridGeometry(
           scrollOffset: mainAxisOffset,
@@ -96,17 +100,21 @@ class SliverStairedGridDelegate
         );
         
         final endMainAxisOffset = mainAxisOffset + mainAxisExtent;
-
-        crossAxisOffset += crossAxisExtent + crossAxisSpacing;
         geometries[j] = tileRect;
         
         if (endMainAxisOffset > targetMainAxisOffset) {
           targetMainAxisOffset = endMainAxisOffset;
         }
+        
+        double nextCrossAxisOffset = crossAxisOffset + crossAxisExtent + crossAxisSpacing;
+        if (nextCrossAxisOffset + crossAxisExtent <= maxCrossAxisExtent) {
+          crossAxisOffsets.add(nextCrossAxisOffset);
+        } else {
+          crossAxisOffsets.add(0);
+        }
       }
 
       mainAxisOffset = targetMainAxisOffset + mainAxisSpacing;
-      crossAxisOffset = 0;
     }
 
     return SliverPatternGridGeometries(tiles: geometries, bounds: geometries);
