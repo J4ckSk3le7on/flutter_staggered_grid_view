@@ -82,7 +82,7 @@ class SliverStairedGridDelegate
       final usableCrossAxisExtent = maxCrossAxisExtent - ((i - startIndex - 1) * crossAxisSpacing);
       double targetMainAxisOffset = 0;
       
-      List<double> tempCrossAxisOffsets = List.from(crossAxisOffsets);
+      List<double> tempCrossAxisOffsets = crossAxisOffsets.isNotEmpty ? List.from(crossAxisOffsets) : [0];
       crossAxisOffsets.clear();
       
       for (int j = startIndex; j < i; j++) {
@@ -90,7 +90,7 @@ class SliverStairedGridDelegate
         final crossAxisExtent = usableCrossAxisExtent * tile.crossAxisRatio;
         final mainAxisExtent = crossAxisExtent / tile.aspectRatio;
         
-        double crossAxisOffset = tempCrossAxisOffsets.removeAt(0);
+        double crossAxisOffset = tempCrossAxisOffsets.isNotEmpty ? tempCrossAxisOffsets.removeAt(0) : 0;
         
         final tileRect = SliverGridGeometry(
           scrollOffset: mainAxisOffset,
