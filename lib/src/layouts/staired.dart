@@ -15,14 +15,10 @@ class StairedGridTile {
 
   /// The amount of extent this tile is taking in the cross axis, according to
   /// the usable cross axis extent.
-  /// For exemple if [crossAxisRatio] is 0.5, and the usable cross axis extent
-  /// is 100. The the tile will have a cross axis extent of 50.
-  ///
   /// Must be between 0 and 1.
   final double crossAxisRatio;
 
   /// The ratio of the cross-axis to the main-axis extent of the tile.
-  ///
   /// Must be greater than 0.
   final double aspectRatio;
 
@@ -50,9 +46,7 @@ class SliverStairedGridDelegate
           crossAxisSpacing: crossAxisSpacing,
         );
 
-  /// {@template fsgv.global.tileBottomSpace}
   /// The number of logical pixels of the space below each tile.
-  /// {@endtemplate}
   final double tileBottomSpace;
 
   /// Indicates whether we should start to place the tile in the reverse cross
@@ -74,58 +68,27 @@ class SliverStairedGridDelegate
     double crossAxisOffset =
         startCrossAxisDirectionReversed ? maxCrossAxisExtent : 0;
     bool reversed = startCrossAxisDirectionReversed;
+
     while (i < tileCount) {
-      int startIndex = i;
-      double crossAxisRatioSum = 0;
-      while (crossAxisRatioSum < 1 && i < tileCount) {
-        crossAxisRatioSum += pattern[i].crossAxisRatio;
-        i++;
-      }
-      if (crossAxisRatioSum > 1) {
-        // The last ratio is too high. We remove it from this track.
-        i--;
-      }
-      final tileBottomSpaceSum = tileBottomSpace * (i - startIndex);
-      final isHorizontal = constraints.axis == Axis.horizontal;
-      final usableCrossAxisExtent = ((startIndex == 0
-                  ? maxCrossAxisExtent
-                  : maxCrossAxisExtent - crossAxisSpacing) -
-              (i - startIndex - 1) * crossAxisSpacing -
-              (i == tileCount ? crossAxisSpacing : 0) -
-              (isHorizontal ? tileBottomSpaceSum : 0))
-          .clamp(0, maxCrossAxisExtent);
+      final tile = pattern[i];
+      final crossAxisExtent = maxCrossAxisExtent * tile.crossAxisRatio;
+      final mainAxisExtent = crossAxisExtent / tile.aspectRatio;
 
-      double targetMainAxisOffset = 0;
-      for (int j = startIndex; j < i; j++) {
-        final tile = pattern[j];
-        final crossAxisExtent = usableCrossAxisExtent * tile.crossAxisRatio +
-            (isHorizontal ? tileBottomSpace : 0);
-        final mainAxisExtent = crossAxisExtent / tile.aspectRatio +
-            (isHorizontal ? 0 : tileBottomSpace);
-        crossAxisOffset =
-            reversed ? crossAxisOffset - crossAxisExtent : crossAxisOffset;
-        final tileRect = SliverGridGeometry(
-          scrollOffset: mainAxisOffset,
-          crossAxisOffset: crossAxisOffset,
-          mainAxisExtent: mainAxisExtent,
-          crossAxisExtent: crossAxisExtent,
-        );
-        final endMainAxisOffset = mainAxisOffset + mainAxisExtent;
+      crossAxisOffset = reversed ? crossAxisOffset - crossAxisExtent : crossAxisOffset;
 
-        crossAxisOffset = reversed
-            ? crossAxisOffset - crossAxisSpacing
-            : crossAxisOffset + crossAxisExtent + crossAxisSpacing;
-        mainAxisOffset += mainAxisSpacing;
-        geometries[j] = tileRect;
-        if (endMainAxisOffset > targetMainAxisOffset) {
-          targetMainAxisOffset = endMainAxisOffset;
-        }
-      }
+      geometries[i] = SliverGridGeometry(
+        scrollOffset: mainAxisOffset,
+        crossAxisOffset: crossAxisOffset,
+        mainAxisExtent: mainAxisExtent,
+        crossAxisExtent: crossAxisExtent,
+      );
 
-      mainAxisOffset = targetMainAxisOffset + mainAxisSpacing;
+      mainAxisOffset += mainAxisExtent + mainAxisSpacing;
+      crossAxisOffset = reversed
+          ? crossAxisOffset - crossAxisSpacing
+          : crossAxisOffset + crossAxisExtent + crossAxisSpacing;
       reversed = !reversed;
-      crossAxisOffset =
-          reversed ? maxCrossAxisExtent - crossAxisSpacing : crossAxisSpacing;
+      i++;
     }
 
     return SliverPatternGridGeometries(tiles: geometries, bounds: geometries);
@@ -135,7 +98,6 @@ class SliverStairedGridDelegate
   bool shouldRelayout(SliverStairedGridDelegate oldDelegate) {
     return super.shouldRelayout(oldDelegate) ||
         oldDelegate.tileBottomSpace != tileBottomSpace ||
-        oldDelegate.startCrossAxisDirectionReversed !=
-            startCrossAxisDirectionReversed;
+        oldDelegate.startCrossAxisDirectionReversed != startCrossAxisDirectionReversed;
   }
 }
