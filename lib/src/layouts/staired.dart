@@ -65,9 +65,8 @@ class SliverStairedGridDelegate
     );
     int i = 0;
     double mainAxisOffset = 0;
-    double crossAxisOffset =
-        startCrossAxisDirectionReversed ? maxCrossAxisExtent : 0;
-    bool reversed = startCrossAxisDirectionReversed;
+    double crossAxisOffset = 0;
+    bool reversed = false;
     
     while (i < tileCount) {
       int startIndex = i;
@@ -89,8 +88,6 @@ class SliverStairedGridDelegate
         final crossAxisExtent = usableCrossAxisExtent * tile.crossAxisRatio;
         final mainAxisExtent = crossAxisExtent / tile.aspectRatio;
         
-        crossAxisOffset = reversed ? crossAxisOffset - crossAxisExtent : crossAxisOffset;
-        
         final tileRect = SliverGridGeometry(
           scrollOffset: mainAxisOffset,
           crossAxisOffset: crossAxisOffset,
@@ -100,10 +97,7 @@ class SliverStairedGridDelegate
         
         final endMainAxisOffset = mainAxisOffset + mainAxisExtent;
 
-        crossAxisOffset = reversed
-            ? crossAxisOffset - crossAxisSpacing
-            : crossAxisOffset + crossAxisExtent + crossAxisSpacing;
-        
+        crossAxisOffset += crossAxisExtent + crossAxisSpacing;
         geometries[j] = tileRect;
         
         if (endMainAxisOffset > targetMainAxisOffset) {
@@ -112,8 +106,7 @@ class SliverStairedGridDelegate
       }
 
       mainAxisOffset = targetMainAxisOffset + mainAxisSpacing;
-      reversed = !reversed;
-      crossAxisOffset = reversed ? maxCrossAxisExtent : 0;
+      crossAxisOffset = 0;
     }
 
     return SliverPatternGridGeometries(tiles: geometries, bounds: geometries);
